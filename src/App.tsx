@@ -1,4 +1,4 @@
-import React, {FC, useState} from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import './App.css';
 import AddPizzaForm from "./components/AddPizzaForm";
 import Pizza from "./models/Pizza";
@@ -6,30 +6,43 @@ import DisplayPizzas from "./components/DisplayPizzas";
 
 const App: FC = () => {
 
-    const [pizzasList, setPizzasList] = useState<Pizza[]>([]);
+    // Инициализация состояния с использованием данных из localStorage
+    const [pizzasList, setPizzasList] = useState<Pizza[]>(() => {
+        const savedPizzas = localStorage.getItem('pizzasList');
+        return savedPizzas ? JSON.parse(savedPizzas) : [];
+    });
+
+    // Сохранение состояния в localStorage при каждом его обновлении
+    useEffect(() => {
+        localStorage.setItem('pizzasList', JSON.stringify(pizzasList));
+    }, [pizzasList]);
 
     const addPizza = (newPizza: Pizza) => {
-        setPizzasList([...pizzasList, newPizza]);
+        setPizzasList(prevPizzasList => [...prevPizzasList, newPizza]);
     }
 
     const updatePizza = (newPizza: Pizza) => {
-        setPizzasList(pizzasList.map(pizza => pizza.id === newPizza.id ? newPizza : pizza));
-    }
-    const deletePizza = (id: number) => {
-        const newPizzasList = pizzasList.filter(pizza => pizza.id !== id);
-        setPizzasList(newPizzasList);
+        setPizzasList(prevPizzasList =>
+            prevPizzasList.map(pizza => pizza.id === newPizza.id ? newPizza : pizza)
+        );
     }
 
-    console.log('pizzasList >>>>>', pizzasList)
+    const deletePizza = (id: number) => {
+        setPizzasList(prevPizzasList =>
+            prevPizzasList.filter(pizza => pizza.id !== id)
+        );
+    }
+
+
     return (
         <div className="App">
             <div className="wrap">
                 <span className="heading">Наша пиццерия</span>
-                <AddPizzaForm  addPizza={addPizza}/>
-                <DisplayPizzas pizzasList={pizzasList} updatePizza={updatePizza} deletePizza={deletePizza}/>
+                <AddPizzaForm addPizza={addPizza} />
+                <DisplayPizzas pizzasList={pizzasList} updatePizza={updatePizza} deletePizza={deletePizza} />
             </div>
         </div>
     );
-}
+};
 
 export default App;
